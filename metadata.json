@@ -1,0 +1,6 @@
+{
+  "name": "Sky Souss Cars",
+  "description": "Location de voitures à Agadir dès 250 DH/jour avec réservation WhatsApp et espace d'administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
