@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { Vehicle, VehicleCategory, TransmissionType, FuelType, VehicleStatus } from '../../types';
 import { PRESET_CAR_IMAGES } from '../../data/initialData';
+import { uploadVehicleImage } from '../../lib/supabaseClient';
+import { Loader2 } from 'lucide-react';
 
 interface AdminVehicleModalProps {
   vehicle?: Vehicle | null;
@@ -45,21 +47,27 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
 
   const [newImageUrl, setNewImageUrl] = useState('');
   const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Handle local file uploads (Multi-photo support)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle local file uploads (Upload to Supabase Storage bucket vehicle-images)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setImages((prev) => [...prev, reader.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    setIsUploading(true);
+    setError('');
+
+    try {
+      const fileList = Array.from(files) as File[];
+      const uploadPromises = fileList.map(file => uploadVehicleImage(file));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedUrls]);
+    } catch (err: any) {
+      console.error('Error uploading image to Supabase:', err);
+      setError('Erreur lors de l’upload de l’image.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAddUrlImage = () => {
@@ -429,15 +437,26 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
             {/* Upload or Add Photo Controls */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               {/* File Upload (Multi) */}
-              <label className="flex flex-col items-center justify-center p-4 rounded-xl bg-zinc-900 border border-dashed border-zinc-700 hover:border-[#F5C518] cursor-pointer transition-colors text-center">
-                <Upload className="w-6 h-6 text-[#F5C518] mb-1.5" />
-                <span className="text-xs font-bold text-white">Importer depuis l'ordinateur</span>
-                <span className="text-[10px] text-zinc-500 mt-0.5">JPEG, PNG ou WebP (Multiples autorisés)</span>
+              <label className={`flex flex-col items-center justify-center p-4 rounded-xl bg-zinc-900 border border-dashed ${isUploading ? 'border-[#F5C518] bg-zinc-900/80 cursor-wait' : 'border-zinc-700 hover:border-[#F5C518] cursor-pointer'} transition-colors text-center`}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 text-[#F5C518] mb-1.5 animate-spin" />
+                    <span className="text-xs font-bold text-[#F5C518]">Envoi vers Supabase Storage...</span>
+                    <span className="text-[10px] text-zinc-400 mt-0.5">Veuillez patienter</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-6 h-6 text-[#F5C518] mb-1.5" />
+                    <span className="text-xs font-bold text-white">Importer depuis l'ordinateur</span>
+                    <span className="text-[10px] text-zinc-500 mt-0.5">Stocké sur Supabase Storage (Bucket vehicle-images)</span>
+                  </>
+                )}
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleFileUpload}
+                  disabled={isUploading}
                   className="hidden"
                 />
               </label>

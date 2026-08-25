@@ -101,7 +101,7 @@ export const VehicleDetailModal: React.FC = () => {
     return `https://wa.me/${BUSINESS_INFO.phonePrimaryRaw}?text=${encodeURIComponent(msg)}`;
   };
 
-  const handleDirectBooking = (e: React.FormEvent) => {
+  const handleDirectBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setPhoneTouched(true);
@@ -135,8 +135,8 @@ export const VehicleDetailModal: React.FC = () => {
       return;
     }
 
-    // Save reservation with status "En attente" to AppContext
-    const created = addReservation({
+    // Save reservation with status "En attente" to Supabase / AppContext
+    const created = await addReservation({
       clientName: clientName.trim(),
       clientPhone: phoneCheck.formatted,
       vehicleId: selectedVehicle.id,
@@ -153,7 +153,7 @@ export const VehicleDetailModal: React.FC = () => {
       status: 'En attente'
     });
 
-    setSubmittedReservationId(created.id);
+    setSubmittedReservationId(created?.id || `res-${Date.now().toString().slice(-4)}`);
     setBookingSuccess(true);
   };
 

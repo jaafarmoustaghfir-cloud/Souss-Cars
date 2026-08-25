@@ -23,7 +23,7 @@ export const AdminReservationModal: React.FC<AdminReservationModalProps> = ({ on
 
   const targetVehicle = vehicles.find(v => v.id === selectedVehicleId) || vehicles[0];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -50,7 +50,7 @@ export const AdminReservationModal: React.FC<AdminReservationModalProps> = ({ on
     const pricePerDay = targetVehicle ? targetVehicle.price : 250;
     const totalPrice = days * pricePerDay;
 
-    addReservation({
+    await addReservation({
       clientName: clientName.trim(),
       clientPhone: clientPhone.trim(),
       clientEmail: clientEmail.trim(),
