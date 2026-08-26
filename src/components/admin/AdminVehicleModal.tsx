@@ -50,6 +50,7 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
   const [newImageUrl, setNewImageUrl] = useState('');
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [modalImgErrors, setModalImgErrors] = useState<Record<number, boolean>>({});
 
   if (!isOpen) return null;
 
@@ -400,9 +401,22 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
               {images.map((imgUrl, idx) => (
                 <div 
                   key={idx} 
-                  className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-zinc-900 border border-zinc-700"
+                  className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-zinc-900 border border-zinc-700 flex items-center justify-center"
                 >
-                  <img src={imgUrl} alt={`Car ${idx + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  {!modalImgErrors[idx] ? (
+                    <img 
+                      src={imgUrl} 
+                      alt={`Car ${idx + 1}`} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer"
+                      onError={() => setModalImgErrors(prev => ({ ...prev, [idx]: true }))}
+                    />
+                  ) : (
+                    <div className="text-center p-2 text-zinc-500 text-[10px]">
+                      <AlertCircle className="w-5 h-5 mx-auto mb-1 text-amber-400" />
+                      <span>URL invalide</span>
+                    </div>
+                  )}
                   
                   {idx === 0 && (
                     <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-[#F5C518] text-[#0D0D0D] font-extrabold text-[9px] uppercase">

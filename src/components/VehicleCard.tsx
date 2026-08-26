@@ -25,9 +25,12 @@ interface VehicleCardProps {
 export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
   const { setSelectedVehicle } = useApp();
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
   const hasImages = Array.isArray(vehicle.images) && vehicle.images.length > 0 && vehicle.images.some(img => Boolean(img && img.trim().length > 0));
   const images = hasImages ? vehicle.images : [];
+  const currentImgSrc = images[currentImgIdx];
+  const isCurrentImgFailed = !currentImgSrc || imgErrors[currentImgIdx];
 
   const isAvailable = vehicle.status === 'Disponible';
 
@@ -44,18 +47,21 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
     >
       {/* Top Image & Badges */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-zinc-900 flex items-center justify-center">
-        {hasImages ? (
+        {hasImages && !isCurrentImgFailed ? (
           <>
             <img
-              src={images[currentImgIdx]}
+              src={currentImgSrc}
               alt={vehicle.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
+              onError={() => {
+                setImgErrors(prev => ({ ...prev, [currentImgIdx]: true }));
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent opacity-80" />
           </>
         ) : (
-          <VehicleImagePlaceholder text="Photo à venir" iconSize="md" />
+          <VehicleImagePlaceholder text="Photo à venir" iconSize="md" subtext={vehicle.name} />
         )}
 
         {/* Category Pill */}

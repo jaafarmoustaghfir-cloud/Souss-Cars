@@ -23,6 +23,7 @@ export const AdminVehicles: React.FC = () => {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState<string>('Toutes');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [failedImgIds, setFailedImgIds] = useState<Record<string, boolean>>({});
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -142,15 +143,16 @@ export const AdminVehicles: React.FC = () => {
             >
               {/* Photo & Badge */}
               <div className="relative aspect-[16/10] w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
-                {mainImg ? (
+                {mainImg && !failedImgIds[car.id] ? (
                   <img
                     src={mainImg}
                     alt={car.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
+                    onError={() => setFailedImgIds(prev => ({ ...prev, [car.id]: true }))}
                   />
                 ) : (
-                  <VehicleImagePlaceholder text="Photo à venir" iconSize="md" />
+                  <VehicleImagePlaceholder text="Photo à venir" subtext={car.name} iconSize="md" />
                 )}
                 <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-white border border-zinc-700">
                   {car.category}

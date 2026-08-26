@@ -30,6 +30,7 @@ export const VehicleDetailModal: React.FC = () => {
   const { selectedVehicle, setSelectedVehicle, addReservation, isVehicleAvailable, getVehicleBookedDates } = useApp();
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [pickupLocation, setPickupLocation] = useState('Aéroport Agadir Al Massira (Gratuit)');
@@ -249,13 +250,16 @@ export const VehicleDetailModal: React.FC = () => {
             <div className="lg:col-span-6 p-6 sm:p-8 space-y-6 border-b lg:border-b-0 lg:border-r border-zinc-800">
               {/* Main Image */}
               <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 flex items-center justify-center">
-                {hasImages ? (
+                {hasImages && images[activeImgIdx] && !imgErrors[activeImgIdx] ? (
                   <>
                     <img
                       src={images[activeImgIdx]}
                       alt={selectedVehicle.name}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
+                      onError={() => {
+                        setImgErrors(prev => ({ ...prev, [activeImgIdx]: true }));
+                      }}
                     />
                     <span className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-[#F5C518] border border-[#F5C518]/30">
                       {selectedVehicle.category}
@@ -263,7 +267,7 @@ export const VehicleDetailModal: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <VehicleImagePlaceholder text="Photo à venir" subtext="Ajout prochainement" iconSize="lg" />
+                    <VehicleImagePlaceholder text="Photo à venir" subtext={selectedVehicle.name} iconSize="lg" />
                     <span className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-[#F5C518] border border-[#F5C518]/30">
                       {selectedVehicle.category}
                     </span>
@@ -273,7 +277,7 @@ export const VehicleDetailModal: React.FC = () => {
 
               {/* Thumbnails if multiple */}
               {images.length > 1 && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {images.map((img, i) => (
                     <button
                       key={i}
@@ -282,7 +286,19 @@ export const VehicleDetailModal: React.FC = () => {
                         activeImgIdx === i ? 'border-[#F5C518] scale-105' : 'border-zinc-800 opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt="Thumbnail" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      {!imgErrors[i] ? (
+                        <img 
+                          src={img} 
+                          alt={`Thumbnail ${i + 1}`} 
+                          className="w-full h-full object-cover" 
+                          referrerPolicy="no-referrer"
+                          onError={() => setImgErrors(prev => ({ ...prev, [i]: true }))} 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-zinc-500">
+                          <Car className="w-4 h-4" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>

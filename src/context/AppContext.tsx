@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { Vehicle, Reservation, BlockedDate, ReservationStatus, VehicleStatus, VehicleCategory, TransmissionType, FuelType } from '../types';
 import { INITIAL_VEHICLES, INITIAL_RESERVATIONS, INITIAL_BLOCKED_DATES } from '../data/initialData';
 import { supabase, SupabaseVehicleRow, SupabaseReservationRow } from '../lib/supabaseClient';
+import { parseVehicleImages, serializeVehicleImages } from '../utils/imageUtils';
 
 export type SupabaseStatus = 'connected' | 'missing_tables' | 'error' | 'loading';
 
@@ -55,14 +56,7 @@ function isValidUUID(str: string): boolean {
 
 // Convert Supabase vehicle row to frontend Vehicle model
 function mapRowToVehicle(row: SupabaseVehicleRow): Vehicle {
-  let images: string[] = [];
-  if (row.image_url) {
-    if (row.image_url.includes(',')) {
-      images = row.image_url.split(',').map((s) => s.trim()).filter(Boolean);
-    } else if (row.image_url.trim().length > 0) {
-      images = [row.image_url.trim()];
-    }
-  }
+  const images = parseVehicleImages(row.image_url);
 
   const category = (row.category || 'Économique') as VehicleCategory;
   const isHighEnd = category === 'Luxe' || category === 'SUV';
@@ -103,7 +97,7 @@ function mapVehicleToRow(v: Omit<Vehicle, 'id'> | Vehicle) {
     year: Number(v.year),
     mileage: v.mileage,
     status: v.status,
-    image_url: v.images && v.images.length > 0 ? v.images.join(',') : null,
+    image_url: serializeVehicleImages(v.images),
     description: v.description || null
   };
 }
@@ -455,7 +449,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (updates.year !== undefined) payload.year = Number(updates.year);
       if (updates.mileage !== undefined) payload.mileage = updates.mileage;
       if (updates.status !== undefined) payload.status = updates.status;
-      if (updates.images !== undefined) payload.image_url = updates.images.join(',');
+      if (updates.images !== undefined) payload.image_url = serializeVehicleImages(updates.images);
       if (updates.description !== undefined) payload.description = updates.description;
 
       if (Object.keys(payload).length > 0 && isValidUUID(id)) {

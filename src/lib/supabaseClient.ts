@@ -81,44 +81,24 @@ CREATE POLICY "Allow public insert reservations" ON public.reservations FOR INSE
 CREATE POLICY "Allow public update reservations" ON public.reservations FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete reservations" ON public.reservations FOR DELETE USING (true);
 
--- 4. Activer Supabase Realtime sur les deux tables
+-- 4. Configuration du Bucket de Stockage 'vehicle-images' (Public)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('vehicle-images', 'vehicle-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Policies de stockage pour autoriser l'upload et la lecture des photos
+CREATE POLICY "Allow public select vehicle-images" ON storage.objects FOR SELECT USING (bucket_id = 'vehicle-images');
+CREATE POLICY "Allow public insert vehicle-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'vehicle-images');
+CREATE POLICY "Allow public update vehicle-images" ON storage.objects FOR UPDATE USING (bucket_id = 'vehicle-images');
+CREATE POLICY "Allow public delete vehicle-images" ON storage.objects FOR DELETE USING (bucket_id = 'vehicle-images');
+
+-- 5. Activer Supabase Realtime sur les deux tables
 ALTER PUBLICATION supabase_realtime ADD TABLE public.vehicles;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.reservations;
 
--- 5. Recharger le cache du schéma PostgREST
+-- 6. Recharger le cache du schéma PostgREST
 NOTIFY pgrst, 'reload schema';
 `;
 
-/**
- * Upload an image file to Supabase Storage bucket 'vehicle-images'
- * and return the public URL.
- */
-export async function uploadVehicleImage(file: File): Promise<string> {
-  const fileExt = file.name.split('.').pop() || 'jpg';
-  const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, '_');
-  const fileName = `${Date.now()}_${cleanName}.${fileExt}`;
-  const filePath = `${fileName}`;
+export { uploadVehicleImage } from '../utils/imageUtils';
 
-  const { error: uploadError } = await supabase.storage
-    .from('vehicle-images')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: true,
-    });
-
-  if (uploadError) {
-    console.warn('Supabase storage upload error (bucket "vehicle-images" might need to be created in Supabase dashboard):', uploadError);
-    // Fallback to data URL
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  const { data } = supabase.storage
-    .from('vehicle-images')
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
-}

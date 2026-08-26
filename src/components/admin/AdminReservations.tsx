@@ -321,6 +321,10 @@ export const AdminReservations: React.FC = () => {
                             src={res.vehicleImage} 
                             alt={res.vehicleName} 
                             className="w-10 h-8 rounded-lg object-cover bg-zinc-900 border border-zinc-800 flex-shrink-0"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
                           />
                         ) : (
                           <div className="w-10 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 flex-shrink-0">
