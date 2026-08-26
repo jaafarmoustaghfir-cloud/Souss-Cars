@@ -16,12 +16,14 @@ import { uploadVehicleImage } from '../../lib/supabaseClient';
 import { Loader2 } from 'lucide-react';
 
 interface AdminVehicleModalProps {
+  isOpen?: boolean;
   vehicle?: Vehicle | null;
   onSave: (data: Omit<Vehicle, 'id'>) => void;
   onClose: () => void;
 }
 
 export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
+  isOpen = true,
   vehicle,
   onSave,
   onClose
@@ -48,6 +50,8 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
   const [newImageUrl, setNewImageUrl] = useState('');
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  if (!isOpen) return null;
 
   // Handle local file uploads (Upload to Supabase Storage bucket vehicle-images)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -454,7 +454,7 @@ export const AdminReservations: React.FC = () => {
         </div>
       </div>
 
-      {modalOpen && <AdminReservationModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && <AdminReservationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />}
     </div>
   );
 };

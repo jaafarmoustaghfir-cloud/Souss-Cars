@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AdminSidebar } from './AdminSidebar';
@@ -33,6 +34,7 @@ export const AdminDashboard: React.FC = () => {
   const { 
     adminTab, 
     setCurrentView, 
+    setIsAdminLoggedIn,
     reservations, 
     vehicles,
     addVehicle,
@@ -50,6 +52,11 @@ export const AdminDashboard: React.FC = () => {
   const [showSqlModal, setShowSqlModal] = useState(false);
 
   const pendingCount = reservations.filter(r => r.status === 'En attente').length;
+
+  const handleLogout = () => {
+    setIsAdminLoggedIn(false);
+    setCurrentView('admin');
+  };
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
@@ -102,6 +109,13 @@ export const AdminDashboard: React.FC = () => {
             title="Retour au site"
           >
             <Globe className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl bg-rose-950/60 border border-rose-800/50 text-rose-300 hover:text-white"
+            title="Déconnexion"
+          >
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -171,6 +185,15 @@ export const AdminDashboard: React.FC = () => {
             >
               <Globe className="w-3.5 h-3.5 text-[#F5C518]" />
               <span>Voir le Site Public</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 px-3.5 py-1.5 rounded-xl border border-rose-800/60 transition-colors cursor-pointer"
+              title="Se déconnecter de l'administration"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Déconnexion</span>
             </button>
           </div>
         </header>
@@ -307,17 +330,21 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Vehicle Add / Edit Modal */}
-      <AdminVehicleModal
-        isOpen={vehicleModalOpen}
-        onClose={() => setVehicleModalOpen(false)}
-        onSave={handleSaveVehicle}
-      />
+      {vehicleModalOpen && (
+        <AdminVehicleModal
+          isOpen={vehicleModalOpen}
+          onClose={() => setVehicleModalOpen(false)}
+          onSave={handleSaveVehicle}
+        />
+      )}
 
       {/* Reservation Add Modal */}
-      <AdminReservationModal
-        isOpen={reservationModalOpen}
-        onClose={() => setReservationModalOpen(false)}
-      />
+      {reservationModalOpen && (
+        <AdminReservationModal
+          isOpen={reservationModalOpen}
+          onClose={() => setReservationModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

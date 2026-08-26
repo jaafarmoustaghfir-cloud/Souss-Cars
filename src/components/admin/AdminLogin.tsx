@@ -4,7 +4,7 @@ import { Logo } from '../Logo';
 import { useApp } from '../../context/AppContext';
 
 export const AdminLogin: React.FC = () => {
-  const { setIsAdminLoggedIn, setCurrentView } = useApp();
+  const { setIsAdminLoggedIn, setCurrentView, setAdminTab } = useApp();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -17,11 +17,16 @@ export const AdminLogin: React.FC = () => {
     setLoading(true);
 
     setTimeout(() => {
-      // Credentials specified by user: zac / w92007
-      if (username.trim().toLowerCase() === 'zac' && password === 'w92007') {
+      // Valid credentials: zac / 2007
+      const cleanUser = username.trim().toLowerCase();
+      const cleanPass = password.trim();
+
+      if (cleanUser === 'zac' && cleanPass === '2007') {
+        setError('');
+        setAdminTab('overview');
         setIsAdminLoggedIn(true);
       } else {
-        setError('Identifiants incorrects. Veuillez vérifier le nom d’utilisateur et le mot de passe.');
+        setError('Nom d’utilisateur ou mot de passe incorrect. Veuillez réessayer.');
       }
       setLoading(false);
     }, 300);
@@ -78,7 +83,8 @@ export const AdminLogin: React.FC = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="zac"
-              className="w-full bg-[#181818] border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C518] transition-colors"
+              autoComplete="username"
+              className="w-full bg-[#181818] border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C518] transition-colors placeholder-zinc-500"
             />
           </div>
 
@@ -93,14 +99,10 @@ export const AdminLogin: React.FC = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-[#181818] border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C518] transition-colors"
+              placeholder="Mot de passe"
+              autoComplete="current-password"
+              className="w-full bg-[#181818] border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F5C518] transition-colors placeholder-zinc-500"
             />
-          </div>
-
-          <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 flex items-center justify-between">
-            <span>Identifiants configurés :</span>
-            <span className="text-[#F5C518] font-mono font-bold">zac / w92007</span>
           </div>
 
           {/* Submit Button */}

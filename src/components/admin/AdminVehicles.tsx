@@ -258,6 +258,7 @@ export const AdminVehicles: React.FC = () => {
       {/* Add / Edit Modal */}
       {modalOpen && (
         <AdminVehicleModal
+          isOpen={modalOpen}
           vehicle={editingVehicle}
           onSave={handleSave}
           onClose={() => {

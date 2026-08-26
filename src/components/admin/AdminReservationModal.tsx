@@ -4,10 +4,14 @@ import { useApp } from '../../context/AppContext';
 import { ReservationStatus } from '../../types';
 
 interface AdminReservationModalProps {
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export const AdminReservationModal: React.FC<AdminReservationModalProps> = ({ onClose }) => {
+export const AdminReservationModal: React.FC<AdminReservationModalProps> = ({ 
+  isOpen = true, 
+  onClose 
+}) => {
   const { vehicles, addReservation } = useApp();
 
   const [clientName, setClientName] = useState('');
@@ -20,6 +24,8 @@ export const AdminReservationModal: React.FC<AdminReservationModalProps> = ({ on
   const [notes, setNotes] = useState('Réservation téléphonique');
   const [status, setStatus] = useState<ReservationStatus>('Confirmée');
   const [error, setError] = useState('');
+
+  if (!isOpen) return null;
 
   const targetVehicle = vehicles.find(v => v.id === selectedVehicleId) || vehicles[0];
 

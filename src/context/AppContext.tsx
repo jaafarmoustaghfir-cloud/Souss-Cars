@@ -44,7 +44,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const AUTH_KEY = 'ssc_admin_auth_v2';
+const AUTH_KEY = 'ssc_admin_auth_v3_session';
 const LOCAL_VEHICLES_KEY = 'ssc_cached_vehicles_v3_catalog';
 const LOCAL_RESERVATIONS_KEY = 'ssc_cached_reservations_v3';
 
@@ -165,7 +165,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // UI States
   const [activeCategory, setActiveCategory] = useState<string>('Toutes');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [currentView, setCurrentView] = useState<'public' | 'admin'>('public');
+  const [currentView, setCurrentView] = useState<'public' | 'admin'>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
+          return 'admin';
+        }
+      }
+    } catch {}
+    return 'public';
+  });
   const [adminTab, setAdminTab] = useState<'overview' | 'vehicles' | 'reservations' | 'calendar' | 'settings'>('overview');
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
@@ -176,9 +187,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   });
 
+  // Keep route synced with browser address bar
+  useEffect(() => {
+    const handleLocation = () => {
+      try {
+        const path = window.location.pathname.toLowerCase();
+        const hash = window.location.hash.toLowerCase();
+        if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
+          setCurrentView('admin');
+        } else {
+          setCurrentView('public');
+        }
+      } catch {}
+    };
+
+    window.addEventListener('popstate', handleLocation);
+    window.addEventListener('hashchange', handleLocation);
+    return () => {
+      window.removeEventListener('popstate', handleLocation);
+      window.removeEventListener('hashchange', handleLocation);
+    };
+  }, []);
+
   useEffect(() => {
     try {
-      sessionStorage.setItem(AUTH_KEY, isAdminLoggedIn ? 'true' : 'false');
+      if (currentView === 'admin') {
+        if (!window.location.pathname.startsWith('/admin') && window.location.hash !== '#admin') {
+          window.history.pushState(null, '', '/admin');
+        }
+      } else {
+        if (window.location.pathname.startsWith('/admin') || window.location.hash === '#admin') {
+          window.history.pushState(null, '', '/');
+        }
+      }
+    } catch {}
+  }, [currentView]);
+
+  useEffect(() => {
+    try {
+      if (isAdminLoggedIn) {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+      } else {
+        sessionStorage.removeItem(AUTH_KEY);
+      }
     } catch (e) {
       console.error('Error saving auth:', e);
     }

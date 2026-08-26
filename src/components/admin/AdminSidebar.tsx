@@ -54,7 +54,7 @@ export const AdminSidebar: React.FC = () => {
 
   const handleLogout = () => {
     setIsAdminLoggedIn(false);
-    setCurrentView('public');
+    setCurrentView('admin');
   };
 
   return (
