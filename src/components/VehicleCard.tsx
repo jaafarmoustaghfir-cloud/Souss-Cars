@@ -16,6 +16,7 @@ import {
 import { Vehicle } from '../types';
 import { BUSINESS_INFO } from '../data/initialData';
 import { useApp } from '../context/AppContext';
+import { VehicleImagePlaceholder } from './VehicleImagePlaceholder';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -25,9 +26,8 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
   const { setSelectedVehicle } = useApp();
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
-  const images = vehicle.images && vehicle.images.length > 0
-    ? vehicle.images
-    : ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'];
+  const hasImages = Array.isArray(vehicle.images) && vehicle.images.length > 0 && vehicle.images.some(img => Boolean(img && img.trim().length > 0));
+  const images = hasImages ? vehicle.images : [];
 
   const isAvailable = vehicle.status === 'Disponible';
 
@@ -43,14 +43,20 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
       className="group rounded-2xl bg-[#141414] border border-zinc-800 hover:border-[#F5C518] overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:shadow-[#F5C518]/10"
     >
       {/* Top Image & Badges */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-zinc-900">
-        <img
-          src={images[currentImgIdx]}
-          alt={vehicle.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent opacity-80" />
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-zinc-900 flex items-center justify-center">
+        {hasImages ? (
+          <>
+            <img
+              src={images[currentImgIdx]}
+              alt={vehicle.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent opacity-80" />
+          </>
+        ) : (
+          <VehicleImagePlaceholder text="Photo à venir" iconSize="md" />
+        )}
 
         {/* Category Pill */}
         <span className="absolute top-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 backdrop-blur-sm border border-zinc-700 text-xs font-bold text-white tracking-wide">

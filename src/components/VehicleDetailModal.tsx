@@ -24,6 +24,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { BUSINESS_INFO } from '../data/initialData';
 import { validateMoroccanPhone } from '../utils/moroccoPhone';
+import { VehicleImagePlaceholder } from './VehicleImagePlaceholder';
 
 export const VehicleDetailModal: React.FC = () => {
   const { selectedVehicle, setSelectedVehicle, addReservation, isVehicleAvailable, getVehicleBookedDates } = useApp();
@@ -71,9 +72,8 @@ export const VehicleDetailModal: React.FC = () => {
 
   if (!selectedVehicle) return null;
 
-  const images = selectedVehicle.images && selectedVehicle.images.length > 0
-    ? selectedVehicle.images
-    : ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80'];
+  const hasImages = Array.isArray(selectedVehicle.images) && selectedVehicle.images.length > 0 && selectedVehicle.images.some(img => Boolean(img?.trim()));
+  const images = hasImages ? selectedVehicle.images : [];
 
   // Booked periods for display
   const bookedPeriods = getVehicleBookedDates(selectedVehicle.id);
@@ -248,16 +248,27 @@ export const VehicleDetailModal: React.FC = () => {
             {/* Left Column: Gallery & Specs */}
             <div className="lg:col-span-6 p-6 sm:p-8 space-y-6 border-b lg:border-b-0 lg:border-r border-zinc-800">
               {/* Main Image */}
-              <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800">
-                <img
-                  src={images[activeImgIdx]}
-                  alt={selectedVehicle.name}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                <span className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-[#F5C518] border border-[#F5C518]/30">
-                  {selectedVehicle.category}
-                </span>
+              <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 flex items-center justify-center">
+                {hasImages ? (
+                  <>
+                    <img
+                      src={images[activeImgIdx]}
+                      alt={selectedVehicle.name}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-[#F5C518] border border-[#F5C518]/30">
+                      {selectedVehicle.category}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <VehicleImagePlaceholder text="Photo à venir" subtext="Ajout prochainement" iconSize="lg" />
+                    <span className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-[#F5C518] border border-[#F5C518]/30">
+                      {selectedVehicle.category}
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Thumbnails if multiple */}

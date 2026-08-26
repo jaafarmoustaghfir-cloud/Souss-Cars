@@ -316,12 +316,16 @@ export const AdminReservations: React.FC = () => {
                     {/* Vehicle */}
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2.5">
-                        {res.vehicleImage && (
+                        {res.vehicleImage ? (
                           <img 
                             src={res.vehicleImage} 
                             alt={res.vehicleName} 
                             className="w-10 h-8 rounded-lg object-cover bg-zinc-900 border border-zinc-800 flex-shrink-0"
                           />
+                        ) : (
+                          <div className="w-10 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 flex-shrink-0">
+                            <Car className="w-4 h-4" />
+                          </div>
                         )}
                         <div>
                           <div className="font-bold text-white">{res.vehicleName}</div>

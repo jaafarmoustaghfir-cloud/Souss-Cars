@@ -45,8 +45,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const AUTH_KEY = 'ssc_admin_auth_v2';
-const LOCAL_VEHICLES_KEY = 'ssc_cached_vehicles_v2';
-const LOCAL_RESERVATIONS_KEY = 'ssc_cached_reservations_v2';
+const LOCAL_VEHICLES_KEY = 'ssc_cached_vehicles_v3_catalog';
+const LOCAL_RESERVATIONS_KEY = 'ssc_cached_reservations_v3';
 
 // Helper: Check UUID format
 function isValidUUID(str: string): boolean {
@@ -59,12 +59,9 @@ function mapRowToVehicle(row: SupabaseVehicleRow): Vehicle {
   if (row.image_url) {
     if (row.image_url.includes(',')) {
       images = row.image_url.split(',').map((s) => s.trim()).filter(Boolean);
-    } else {
+    } else if (row.image_url.trim().length > 0) {
       images = [row.image_url.trim()];
     }
-  }
-  if (images.length === 0) {
-    images = ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80'];
   }
 
   const category = (row.category || 'Économique') as VehicleCategory;
@@ -75,7 +72,7 @@ function mapRowToVehicle(row: SupabaseVehicleRow): Vehicle {
     name: row.name || 'Véhicule',
     brand: row.brand || '',
     category: category,
-    price: Number(row.price) || 250,
+    price: Number(row.price) || 350,
     transmission: (row.transmission || 'Manuelle') as TransmissionType,
     fuel: (row.fuel || 'Essence') as FuelType,
     seats: Number(row.seats) || 5,
@@ -88,7 +85,7 @@ function mapRowToVehicle(row: SupabaseVehicleRow): Vehicle {
     airConditioning: true,
     luggage: isHighEnd ? 4 : 3,
     minAge: isHighEnd ? 23 : 21,
-    deposit: isHighEnd ? 3500 : 2000,
+    deposit: isHighEnd ? 4000 : 2000,
     featured: true
   };
 }
@@ -119,7 +116,7 @@ function mapRowToReservation(row: SupabaseReservationRow, allVehicles: Vehicle[]
   const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
   const matchingVehicle = allVehicles.find(v => v.id === row.vehicle_id || v.name.toLowerCase() === (row.vehicle_name || '').toLowerCase());
-  const pricePerDay = matchingVehicle ? matchingVehicle.price : 250;
+  const pricePerDay = matchingVehicle ? matchingVehicle.price : 350;
   const totalPrice = pricePerDay * diffDays;
 
   return {
@@ -129,7 +126,7 @@ function mapRowToReservation(row: SupabaseReservationRow, allVehicles: Vehicle[]
     clientEmail: '',
     vehicleId: String(row.vehicle_id || ''),
     vehicleName: row.vehicle_name || matchingVehicle?.name || 'Véhicule',
-    vehicleImage: matchingVehicle?.images?.[0] || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
+    vehicleImage: matchingVehicle?.images?.[0] || undefined,
     startDate: row.start_date || '',
     endDate: row.end_date || '',
     totalDays: diffDays,
@@ -223,8 +220,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setSupabaseErrorMessage(null);
 
       if (data && data.length > 0) {
-        const loadedVehicles = data.map(mapRowToVehicle);
-        setVehicles(loadedVehicles);
+        // Detect if old vehicles (like Duster or Clio 4 or old 250 DH prices) are present
+        const hasOldCatalog = data.some(d => 
+          d.name === 'Dacia Duster' || 
+          d.name === 'Renault Clio 4' || 
+          (d.name === 'Dacia Logan' && Number(d.price) === 250)
+        );
+
+        if (hasOldCatalog) {
+          try {
+            // Remove old vehicles
+            await supabase.from('vehicles').delete().neq('name', '___NONE___');
+            // Insert the 6 new vehicles
+            const seedPayload = INITIAL_VEHICLES.map(v => mapVehicleToRow(v));
+            const { data: insertedData } = await supabase
+              .from('vehicles')
+              .insert(seedPayload)
+              .select();
+
+            if (insertedData && insertedData.length > 0) {
+              setVehicles(insertedData.map(mapRowToVehicle));
+            } else {
+              setVehicles(INITIAL_VEHICLES);
+            }
+          } catch (delErr) {
+            console.warn('Error upgrading supabase vehicle catalog:', delErr);
+            setVehicles(data.map(mapRowToVehicle));
+          }
+        } else {
+          const loadedVehicles = data.map(mapRowToVehicle);
+          setVehicles(loadedVehicles);
+        }
       } else {
         // If Supabase table is empty on first setup, seed initial vehicles
         const seedPayload = INITIAL_VEHICLES.map(v => mapVehicleToRow(v));
@@ -235,6 +261,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         if (!seedError && insertedData && insertedData.length > 0) {
           setVehicles(insertedData.map(mapRowToVehicle));
+        } else {
+          setVehicles(INITIAL_VEHICLES);
         }
       }
       return true;

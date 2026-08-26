@@ -17,38 +17,18 @@ import {
 } from 'lucide-react';
 import { BUSINESS_INFO } from '../data/initialData';
 import { useApp } from '../context/AppContext';
+import { VehicleImagePlaceholder } from './VehicleImagePlaceholder';
 
 export const Hero: React.FC = () => {
-  const { setActiveCategory } = useApp();
+  const { vehicles, setActiveCategory } = useApp();
 
   const [selectedCat, setSelectedCat] = useState<string>('Toutes');
   const [pickupDate, setPickupDate] = useState<string>('');
   const [returnDate, setReturnDate] = useState<string>('');
   const [activeHeroIndex, setActiveHeroIndex] = useState<number>(0);
 
-  const heroShowcaseCars = [
-    {
-      name: 'Dacia Logan',
-      category: 'Économique',
-      price: 250,
-      image: 'https://i.imgur.com/lpH5TdO.jpeg',
-      badge: 'Bestseller Agadir'
-    },
-    {
-      name: 'Dacia Duster',
-      category: 'SUV & Confort',
-      price: 400,
-      image: 'https://i.imgur.com/uQeraUN.jpeg',
-      badge: 'SUV Polyvalent'
-    },
-    {
-      name: 'Renault Clio 4',
-      category: 'Citadine Dynamique',
-      price: 250,
-      image: 'https://i.imgur.com/GitUGDV.jpeg',
-      badge: 'Économique & Compacte'
-    }
-  ];
+  const showcaseList = vehicles && vehicles.length > 0 ? vehicles : [];
+  const currentCar = showcaseList[activeHeroIndex % (showcaseList.length || 1)] || showcaseList[0];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +47,6 @@ export const Hero: React.FC = () => {
       catalogEl.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
-  const currentCar = heroShowcaseCars[activeHeroIndex];
 
   return (
     <section id="hero" className="relative min-h-[92vh] flex flex-col justify-center bg-[#0D0D0D] overflow-hidden pt-8 pb-16">
@@ -99,15 +77,15 @@ export const Hero: React.FC = () => {
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight font-heading">
               Louez Votre Voiture à Agadir, <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5C518] via-[#ffd644] to-[#f5c518]">
-                À Partir de 250 DH/jour
+                À Partir de 350 DH/jour
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-zinc-300 max-w-2xl leading-relaxed">
-              Profitez d'un parc automobile récent (Dacia Logan, Dacia Duster, Renault Clio 4) avec 
+              Profitez d'un parc automobile sélectionné (Dacia Sandero, Hyundai Accent, Dacia Logan, Kia Cerato, Renault Clio, Touareg) avec 
               <strong className="text-white"> livraison gratuite à l'Aéroport Al Massira</strong>, à votre hôtel ou à Hay Elhouda. 
-              Réservation instantanée sans démarche compliquée.
+              Réservation directe et transparente sans démarche compliquée.
             </p>
 
             {/* Key Value Badges */}
@@ -165,55 +143,65 @@ export const Hero: React.FC = () => {
           {/* Right Column: Hero Showcase Vehicle Image with Dynamic Switcher */}
           <div className="lg:col-span-5 relative flex flex-col items-center">
             {/* Vehicle Showcase Card */}
-            <div className="relative w-full max-w-lg aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#141414] group">
-              <img
-                src={currentCar.image}
-                alt={`Sky Souss Cars - ${currentCar.name}`}
-                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-85" />
+            <div className="relative w-full max-w-lg aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#141414] group flex items-center justify-center">
+              {currentCar?.images && currentCar.images.length > 0 && currentCar.images[0] ? (
+                <>
+                  <img
+                    src={currentCar.images[0]}
+                    alt={`Sky Souss Cars - ${currentCar.name}`}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-85" />
+                </>
+              ) : (
+                <VehicleImagePlaceholder text="Photo à venir" subtext="Véhicule disponible à Agadir" iconSize="lg" />
+              )}
               
               {/* Floating Highlight Card */}
-              <div className="absolute bottom-3 left-3 right-3 p-3.5 rounded-2xl bg-[#0D0D0D]/90 backdrop-blur-md border border-[#F5C518]/30 flex items-center justify-between">
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#F5C518]">
-                    {currentCar.badge}
+              {currentCar && (
+                <div className="absolute bottom-3 left-3 right-3 p-3.5 rounded-2xl bg-[#0D0D0D]/90 backdrop-blur-md border border-[#F5C518]/30 flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#F5C518]">
+                      {currentCar.brand || 'Sky Souss Cars'}
+                    </div>
+                    <div className="text-base font-extrabold text-white">
+                      {currentCar.name}
+                    </div>
+                    <div className="text-xs text-zinc-400">
+                      {currentCar.category} · {currentCar.transmission}
+                    </div>
                   </div>
-                  <div className="text-base font-extrabold text-white">
-                    {currentCar.name}
-                  </div>
-                  <div className="text-xs text-zinc-400">
-                    {currentCar.category} · Climatisée & Entretenue
-                  </div>
-                </div>
 
-                <div className="text-right">
-                  <div className="text-xs text-zinc-400">À partir de</div>
-                  <div className="text-xl font-black text-[#F5C518]">
-                    {currentCar.price} <span className="text-xs font-semibold text-white">DH/j</span>
+                  <div className="text-right">
+                    <div className="text-xs text-zinc-400">Tarif direct</div>
+                    <div className="text-xl font-black text-[#F5C518]">
+                      {currentCar.price} <span className="text-xs font-semibold text-white">DH/j</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Quick Fleet Carousel Selectors */}
-            <div className="flex items-center gap-2 mt-4">
-              {heroShowcaseCars.map((car, idx) => (
-                <button
-                  key={car.name}
-                  onClick={() => setActiveHeroIndex(idx)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    activeHeroIndex === idx
-                      ? 'bg-[#F5C518] text-[#0D0D0D] shadow-md scale-105'
-                      : 'bg-[#181818] text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700'
-                  }`}
-                >
-                  <span>{car.name}</span>
-                  <span className="text-[10px] opacity-80">({car.price} DH)</span>
-                </button>
-              ))}
-            </div>
+            {showcaseList.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                {showcaseList.map((car, idx) => (
+                  <button
+                    key={car.id || car.name}
+                    onClick={() => setActiveHeroIndex(idx)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      activeHeroIndex === idx
+                        ? 'bg-[#F5C518] text-[#0D0D0D] shadow-md scale-105'
+                        : 'bg-[#181818] text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <span>{car.name}</span>
+                    <span className="text-[10px] opacity-80">({car.price} DH)</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

@@ -15,6 +15,7 @@ import {
 import { Vehicle, VehicleCategory, VehicleStatus } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { AdminVehicleModal } from './AdminVehicleModal';
+import { VehicleImagePlaceholder } from '../VehicleImagePlaceholder';
 
 export const AdminVehicles: React.FC = () => {
   const { vehicles, addVehicle, updateVehicle, deleteVehicle, setVehicleStatus } = useApp();
@@ -131,9 +132,8 @@ export const AdminVehicles: React.FC = () => {
       {/* Vehicles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((car) => {
-          const mainImg = car.images && car.images[0]
-            ? car.images[0]
-            : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
+          const hasImage = Array.isArray(car.images) && car.images.length > 0 && car.images.some(img => Boolean(img?.trim()));
+          const mainImg = hasImage ? car.images[0] : null;
 
           return (
             <div
@@ -141,13 +141,17 @@ export const AdminVehicles: React.FC = () => {
               className="rounded-2xl bg-[#141414] border border-zinc-800 overflow-hidden flex flex-col justify-between hover:border-zinc-700 transition-colors shadow-lg"
             >
               {/* Photo & Badge */}
-              <div className="relative aspect-[16/10] w-full bg-zinc-900 overflow-hidden">
-                <img
-                  src={mainImg}
-                  alt={car.name}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
+              <div className="relative aspect-[16/10] w-full bg-zinc-900 overflow-hidden flex items-center justify-center">
+                {mainImg ? (
+                  <img
+                    src={mainImg}
+                    alt={car.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <VehicleImagePlaceholder text="Photo à venir" iconSize="md" />
+                )}
                 <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-md bg-[#0D0D0D]/90 text-xs font-bold text-white border border-zinc-700">
                   {car.category}
                 </span>

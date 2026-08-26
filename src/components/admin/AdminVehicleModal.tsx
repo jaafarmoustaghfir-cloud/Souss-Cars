@@ -104,11 +104,6 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
       return;
     }
 
-    if (images.length === 0) {
-      setError('Veuillez ajouter au moins une photo du véhicule.');
-      return;
-    }
-
     onSave({
       name: name.trim(),
       brand: brand.trim(),
@@ -121,6 +116,7 @@ export const AdminVehicleModal: React.FC<AdminVehicleModalProps> = ({
       year: Number(year),
       mileage: mileage.trim(),
       status,
+      images: images.filter(Boolean),
       description: description.trim() || `${brand} ${name} disponible à la location à Agadir chez Sky Souss Cars.`,
       airConditioning,
       luggage: Number(luggage),
